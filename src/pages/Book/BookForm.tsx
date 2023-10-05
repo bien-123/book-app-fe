@@ -2,17 +2,19 @@ import { Button, DatePicker, Form, Input, Select } from "antd";
 import CustomImage from "../../components/CustomImage";
 import axios from "axios";
 import { useState } from "react";
+// import { Value } from "sass";
 
-const { TextArea } = Input;
+// const { TextArea } = Input;
 const { Option } = Select;
 
 type Props = {
     formType: any;
     setFormType: any;
+    updateData: any;
 }
 
 const BookForm = (props: Props) => {
-  const {formType, setFormType} = props;
+  const {formType, setFormType, updateData} = props;
   const [formData, setFormData] = useState({
     name: '',
     publishedDate: '',
@@ -20,17 +22,48 @@ const BookForm = (props: Props) => {
     author: '',
   })
 
-  const handleSubmit = () => {
-    if(formType.type === 'created') {
-      console.log(1)
-    } else {
-      console.log(2)
+  const handleSubmit = async () => {
+    if((formType.type === 'created') && (updateData === null)) {
+      try {
+        let data:any = {
+          name: document.getElementById('name'),
+          publishedDate: document.getElementById('publishedDate'),
+          genres: document.getElementById('genres'),
+          author: document.getElementById('author'),
+        }
+        data = {
+          name: data.name.value,
+          publishedDate: data.publishedDate.value,
+          genres: [data.genres.value],
+          author: data.author.value,
+        }
+        const response = await axios.post('http://localhost:4000/v1/book/add', data);
+        setFormData(response.data);
+        setFormType({...formType, open: false});
+      } catch (err) {
+        console.log('Error:', err);
+      }
+    } else if(formType.type === 'updated') {
+      try {
+        let data:any = {
+          name: document.getElementById('name'),
+          publishedDate: document.getElementById('publishedDate'),
+          genres: document.getElementById('genres'),
+          author: document.getElementById('author'),
+        }
+        data = {
+          name: data.name.value,
+          publishedDate: data.publishedDate.value,
+          genres: [data.genres.value],
+          author: data.author.value,
+        }
+        const response = await axios.put(`http://localhost:4000/v1/book/${updateData.key}`, data);
+        setFormData(response.data);
+        setFormType({...formType, open: false});
+      } catch (err) {
+        console.log('Error:', err);
+      }
     }
-  }
-
-  const handleChange = (e:any) => {
-    const {name, value} = e.target;
-    setFormData({...formData, [name]: value});
   }
 
     const handleClose = () => {
@@ -45,46 +78,47 @@ const BookForm = (props: Props) => {
             name="namebreak"
             label="Tên sách"
             rules={[{ required: true, message: "Bạn phải nhập tên vi phạm" }]}
-            // initialValue={updateData?.name}
+            initialValue={updateData?.name}
           >
             <Input
               id="name"
               allowClear
               placeholder="Nhập tên sách"
-              onChange={handleChange}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
             ></Input>
           </Form.Item>
           <Form.Item
             name="description"
             label="Ngày xuất bản"
             rules={[{ required: true }]}
-            // initialValue={updateData?.description}
+            // initialValue={updateData?.publishedDate}
           >
             <DatePicker 
+            id="publishedDate"
             placeholder="Ngày xuất bản"
             className="w-full"
-            onChange={handleChange}/>
+            // onChange={(e) => setFormData({...formData})}
+            />
           </Form.Item>
           <Form.Item
-            name="note"
+            name="genres"
             label="Thể loại"
             rules={[{ required: true }]}
-            // initialValue={updateData?.note}
+            initialValue={updateData?.genres}
           >
             <Input
-              id="note"
+              id="genres"
               allowClear
               placeholder="Nhập thể loại"
-              onChange={handleChange}
             ></Input>
           </Form.Item>
           <Form.Item
             name="status"
             label="Tác giả"
-            // initialValue={updateData?.status}
+            initialValue={updateData?.author}
           >
-            <Select
-              id="status"
+            {/* <Select
+              id="author"
               placeholder="Tác giả"
               allowClear
               style={{ marginBottom: 20 }}
@@ -96,7 +130,12 @@ const BookForm = (props: Props) => {
               <Option id="id2" value="Dừng hoạt động">
                 Dừng hoạt động
               </Option>
-            </Select>
+            </Select> */}
+            <Input
+              id="author"
+              allowClear
+              placeholder="Tên tác giả"
+            ></Input>
           </Form.Item>
         </div>
       </Form>
